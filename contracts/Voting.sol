@@ -39,7 +39,7 @@ contract Voting is BallotData {
     function vote(uint32 _optId) public {
         
         //increment the score of the option being voted
-        options[_optId].score = options[_optId].score+1;
+        options[_optId].score++;
         // store the user id against the option voted
         votes[msg.sender] = _optId;
         

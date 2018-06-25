@@ -50,7 +50,7 @@ class App extends Component {
 		try {
 			voting.deployed().then(function(instance) {
 				// console.log("Instance " + instance.address);
-				instance.addOption(option, {gas:3000000,from: currUser}).then(function(txnHash) {
+				instance.addOption.sendTransaction(option, {gas:3000000,from: currUser}).then(function(txnHash) {
 					me.setState({txnId : txnHash});
 				});
 			});
@@ -124,10 +124,7 @@ class App extends Component {
 
 	getReceipt = () => {
 		var v = this.refs.txnId.value;
-
 		web3.eth.getTransactionReceipt(v, function(err, receipt){
-			// console.log('err' + err)
-			me.show(receipt);
 			var txnMsg = "Status : ";
 			if(receipt.status === "0x1") { //success
 				txnMsg = "Sucess </br>";

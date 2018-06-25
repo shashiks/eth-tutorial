@@ -28,7 +28,7 @@ contract BallotData {
     }
 
     /**
-     * Returns name of an Option on given index
+     * Returns name of an Option at given index
      */
     function getOptionAt(uint32 _id) public view returns (string, uint32) {
         return (options[_id].value, options[_id].score);
