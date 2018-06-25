@@ -9,7 +9,7 @@ contract Voting is BallotData {
      */
     address private owner;
     
-    
+    uint version = 0;
     /**
      * Validation to ensure only owner of this contract can call a function
      */
