@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import contract from 'truffle-contract';
 import votingContract from '../build/contracts/Voting.json';
-import VoteOption from './VoteOption.js';
 import Web3 from 'web3';
 
 import './css/pure-min.css'
@@ -28,21 +27,14 @@ class App extends Component {
 			resultMsg : ''
 		}
 		me = this;
+		
 	}
 
 	componentDidMount() {
 		web3 = new Web3(web3.currentProvider)
 		voting.setProvider(web3.currentProvider);
+		// me.initOptionList();
 	}
-
-
-	show = (o) => {
-		for(var i in o) {
-			console.log(i + "->" +o[i]);
-		}
-			
-	}
-
 
 	addOption = () => {
 		let currUser = window.web3.eth.defaultAccount;
@@ -51,7 +43,7 @@ class App extends Component {
 			voting.deployed().then(function(instance) {
 				// console.log("Instance " + instance.address);
 				instance.addOption.sendTransaction(option, {gas:3000000,from: currUser}).then(function(txnHash) {
-					me.setState({txnId : txnHash});
+					me.setState({txnId : "Transaction Id : " + txnHash});
 				});
 			});
 			
@@ -90,7 +82,7 @@ class App extends Component {
 		voting.deployed().then(function(instance) {
 			try {
 				instance.vote.sendTransaction(optId, {gas:3000000, from: currUser}).then( function(txnHash) {
-					me.setState({txnId : txnHash});
+					me.setState({txnId : "Transaction Id : " +  txnHash});
 				});
 			} catch (err) {
 				console.error("Err voting  "+ err);
@@ -99,22 +91,26 @@ class App extends Component {
 		});
 	}
 
-  optionValueStore(optionId) {
-			me.setState({selectedOpt: optionId});
+  optionValueStore(event) {
+		event.stopPropagation();
+		me.setState({selectedOpt: event.target.value});
 	}
 
 	eachOption = (row, index) => {
 		let info = row.split(",");
-		return ( 
-			<VoteOption showScore="false" id={info[0]} item={info[1]} key={info[0]} onValueStore={this.optionValueStore}/>
+		return (
+
+			<div class="pure-control-group">
+				<input type="radio" key={info[0]} id="opt" name="opt" onChange={this.optionValueStore} value={info[0]}  />
+				<label htmlFor="opt">{info[1]}</label>
+			</div>
+
 		);
 	}
 
 	eachScore = (row, index) => {
 		let info = row.split(",");
-		return ( 
-			<VoteOption showScore="true" score={info[2]} id={info[0]} item={info[1]} key={info[0]} onValueStore={this.optionValueStore}/>
-		);
+		return ( <tr><td>{info[1]}</td><td>{info[2]}</td></tr> );
 	}
 
 	clear = () => {
@@ -123,7 +119,7 @@ class App extends Component {
 	}
 
 	getReceipt = () => {
-		var v = this.refs.txnId.value;
+		var v = this.refs.txnRefId.value;
 		web3.eth.getTransactionReceipt(v, function(err, receipt){
 			var txnMsg = "Status : ";
 			if(receipt.status === "0x1") { //success
@@ -143,77 +139,87 @@ class App extends Component {
 	}
 
 	render() {
-
 		return (
 			<div className="App">
-		        <nav className="navbar pure-menu pure-menu-horizontal">
-		            <a href="#" className="pure-menu-heading pure-menu-link">Voting dApp</a>
-		        </nav>
-
-		        <main className="container">
-		          <div className="pure-g">
-		            <div className="pure-u-1-1">
-					  <p><div dangerouslySetInnerHTML={{__html: this.state.resultMsg}} /></p>
-		              <h2>Voting Contract</h2>
-		              <table>
-						<tbody>
-		              	<tr>
-						  	<td><a onClick={ () => { this.clear(); this.setState({view : 'receipt'}) } }>View Status</a></td>
-							<td><a onClick={ () => { this.clear(); this.setState({view : 'create'}) } }>Add Option</a></td>
-		              		<td><a onClick={ () => {this.clear(); this.initOptionList(); this.setState({view : 'vote'})   } }>Show Options</a></td>
-							<td><a onClick={ () => { this.clear(); this.initOptionList(); this.setState({view : 'result'}) } }>View Results</a></td>
-		              	</tr>
-									  {this.state.view === 'receipt' && 										
-											<tr>
-												<td>Txn Hash</td>
-												<td><input type="text" ref="txnId"  /></td>
-												<td><a onClick={ () => { this.getReceipt() } }>Get</a></td>
-											</tr>
-										}
-
-
-										{this.state.view === 'create' && 										
-											<tr>
-												<td>Option Name</td>
-												<td><input type="text" ref="optName"  /></td>
-												<td><a onClick={ () => { this.addOption() } }>save</a></td>
-												<td>{this.state.txnId}</td>
-											</tr>
-										}
-										{this.state.view === 'vote' && this.state.isOptData && 
-											<tr>
-												<table>
-													<tbody>
-														<tr>
-															{this.state.optNames.map(this.eachOption)}
-														</tr>
-														<tr>
-															<td><a onClick={ () => { this.vote() } }>Vote</a></td>
-														</tr>
-														<tr>
-															<td>{this.state.txnId}</td>
-														</tr>
-													</tbody>
+                <main className="container">
+                    <div className="l-box">
+                        <div className="pure-u-1">
+                            <h2>Ethereum Voting dApp</h2>
+                        </div>  
+                    </div>
+					 <div className="l-box">
+                        <div className="pure-u-1" align="center">   
+                          <div dangerouslySetInnerHTML={{__html: this.state.txnId}} />
+                           <div dangerouslySetInnerHTML={{__html: this.state.resultMsg}} />                 
+                        </div>  
+                    </div>
+                        <div className="pure-g">
+                            <div className="pure-u-1-5"> 
+                                <div className="pure-u-1">
+                                        <div className="l-box"><a className="pure-menu-link" onClick={ () => { this.clear(); this.setState({view : 'create'}) } }>Add Option</a></div>
+                                        <div className="l-box"><a className="pure-menu-link" onClick={ () => {this.clear(); this.initOptionList(); this.setState({view : 'vote'})}}>Vote</a></div>
+                                        <div className="l-box"><a className="pure-menu-link" onClick={ () => { this.clear(); this.setState({view : 'result'})}}>View Scores</a> </div>
+                                        <div className="l-box"><a className="pure-menu-link" onClick={ () => { this.initOptionList(); this.setState({view : 'receipt'}) } }>Check Status</a></div>
+                                </div>
+                            </div>
+							<div className="pure-u-4-5"> 
+								<div className="pure-u-1">
+									{this.state.view === 'create' &&
+                                                <form className="pure-form pure-form-stacked">
+													<fieldset>
+														<legend>Add new Option</legend>
+														<input ref="optName" placeholder="Option Name" />
+														<button type="button" className="pure-button pure-button-primary" onClick={ () => { this.addOption()}}>Add</button>
+														<button type="reset" className="pure-button">Cancel</button>
+													</fieldset>
+												</form>
+                                     }
+									{this.state.view === 'vote' && this.state.isOptData && 
+                                                <form className="pure-form pure-form-aligned">
+													<fieldset>
+														<div className="l-box">
+															<legend>Select an Option</legend>{this.state.optNames.map(this.eachOption)}
+														</div>
+														<div className="l-box">
+														<button onClick={() => { this.vote()}} type="button" className="pure-button pure-button-primary">Vote</button>
+														<button type="submit" className="pure-button">Cancel</button>
+														</div>
+													</fieldset>
+												</form>
+                                        }
+										{this.state.view === 'result' &&
+											<form className="pure-form pure-form-stacked">
+												<fieldset>
+												<legend>Ballot Scores</legend>
+													<table className="pure-table pure-table-horizontal">
+														<thead>
+															<tr>
+																<th>Option</th>
+																<th>Score</th>
+															</tr>
+														</thead>
+														<tbody>{this.state.optNames.map(this.eachScore)}</tbody>
 													</table>
-											</tr>
+												</fieldset>
+											</form>
 										}
-										{this.state.view === 'result' && 
-												<tr>
-													{this.state.optNames.map(this.eachScore)}
-												</tr>
-										}
-										</tbody>
-								 </table>		              	
-
-		            </div>
-		          </div>
-		        </main>
-		      </div>			
-
+										{this.state.view === 'receipt' &&
+										 <form className="pure-form pure-form-stacked">
+											<fieldset>
+												<legend>View Transaction Status</legend>
+												<input ref="txnRefId" placeholder="Transaction Id" />
+												<button type="button" className="pure-button pure-button-primary" onClick={ () => { this.getReceipt()}}>Lookup</button>
+												<button type="reset" className="pure-button">Cancel</button>
+											</fieldset>
+										</form>
+										}										
+								</div>
+							</div>	
+                        </div>
+                </main> 
+            </div>  
 		);
-
 	}
-
 }
 
 export default App;
