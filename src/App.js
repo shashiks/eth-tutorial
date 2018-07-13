@@ -16,13 +16,11 @@ class App extends Component {
 	constructor (props) {
 		super(props);
 		this.state = {
-			options: '',
-			totalOptionsCount : '',
 			selectedOpt: -1,
 			isOptData : false,
 			txnId : '',
 			results: '',
-			view: 'receipt',
+			view: 'create',
 			optNames: [],
 			resultMsg : ''
 		}
@@ -33,7 +31,6 @@ class App extends Component {
 	componentDidMount() {
 		web3 = new Web3(web3.currentProvider)
 		voting.setProvider(web3.currentProvider);
-		// me.initOptionList();
 	}
 
 	addOption = () => {
@@ -59,9 +56,6 @@ class App extends Component {
 		var tmpNames = [];
 		voting.deployed().then(function(instance) {
 				instance.optionsCount.call().then( function(optCount) {
-					
-					let v = optCount.toString();
-					me.setState({totalOptionsCount : v});
 					for(let i = 0 ; i < optCount; i++) {
 						instance.getOptionAt.call(i).then(function(optInfo) {
 							tmpNames.push( i+ "," + optInfo);
@@ -73,7 +67,7 @@ class App extends Component {
 					} 
 			});
 		});
-}
+	}
 
 	vote = () => {
 		let optId = this.state.selectedOpt;
@@ -88,6 +82,26 @@ class App extends Component {
 				console.error("Err voting  "+ err);
 				return;
 			}
+		});
+	}
+
+	getReceipt = () => {
+		var v = this.refs.txnRefId.value;
+		web3.eth.getTransactionReceipt(v, function(err, receipt){
+			var txnMsg = "Status : ";
+			if(receipt.status === "0x1") { //success
+				txnMsg = "Sucess </br>";
+			}
+			if(receipt.status === "0x0") { //failure
+				txnMsg = "Failure </br>";
+			}
+			if(!receipt.status) { //unknown
+				txnMsg = "Unknown Failure </br>";
+			}
+			txnMsg += "Block Id : " + receipt.blockHash + "</br>";
+			txnMsg += "Total gas used : " + receipt.cumulativeGasUsed;
+
+			me.setState({resultMsg: txnMsg});
 		});
 	}
 
@@ -118,25 +132,7 @@ class App extends Component {
 		this.setState({resultMsg : ''});
 	}
 
-	getReceipt = () => {
-		var v = this.refs.txnRefId.value;
-		web3.eth.getTransactionReceipt(v, function(err, receipt){
-			var txnMsg = "Status : ";
-			if(receipt.status === "0x1") { //success
-				txnMsg = "Sucess </br>";
-			}
-			if(receipt.status === "0x0") { //failure
-				txnMsg = "Failure </br>";
-			}
-			if(!receipt.status) { //unknown
-				txnMsg = "Unknown Failure </br>";
-			}
-			txnMsg += "Block Id : " + receipt.blockHash + "</br>";
-			txnMsg += "Total gas used : " + receipt.cumulativeGasUsed;
-
-			me.setState({resultMsg: txnMsg});
-		});
-	}
+	
 
 	render() {
 		return (
